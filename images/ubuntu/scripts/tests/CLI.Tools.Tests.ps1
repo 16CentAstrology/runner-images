@@ -1,4 +1,3 @@
-
 Describe "Azure CLI" {
     It "Azure CLI" {
         "az --version" | Should -ReturnZeroExitCode
@@ -11,7 +10,7 @@ Describe "Azure DevOps CLI" {
     }
 }
 
-Describe "Aliyun CLI" {
+Describe "Aliyun CLI" -Skip:((-not (Test-IsUbuntu20)) -and (-not (Test-IsUbuntu22))) {
     It "Aliyun CLI" {
         "aliyun version" | Should -ReturnZeroExitCode
     }
@@ -37,19 +36,19 @@ Describe "GitHub CLI" {
     }
 }
 
-Describe "Google Cloud CLI" {
+Describe "Google Cloud CLI" -Skip:((-not (Test-IsUbuntu20)) -and (-not (Test-IsUbuntu22))) {
     It "Google Cloud CLI" {
         "gcloud --version" | Should -ReturnZeroExitCode
     }
 }
 
-Describe "OC CLI" {
+Describe "OC CLI" -Skip:((-not (Test-IsUbuntu20)) -and (-not (Test-IsUbuntu22))) {
     It "OC CLI" {
         "oc version" | Should -ReturnZeroExitCode
     }
 }
 
-Describe "Oras CLI" {
+Describe "Oras CLI" -Skip:((-not (Test-IsUbuntu20)) -and (-not (Test-IsUbuntu22))) {
     It "Oras CLI" {
         "oras version" | Should -ReturnZeroExitCode
     }

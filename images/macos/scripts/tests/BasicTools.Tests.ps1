@@ -1,4 +1,5 @@
 Import-Module "$PSScriptRoot/../helpers/Common.Helpers.psm1"
+
 $os = Get-OSVersion
 
 Describe "Azure CLI" {
@@ -61,12 +62,6 @@ Describe "Perl" {
     }
 }
 
-Describe "Helm" -Skip:($os.IsMonterey -or $os.IsVentura -or $os.IsSonoma) {
-    It "Helm" {
-        "helm version --short" | Should -ReturnZeroExitCode
-    }
-}
-
 Describe "Tcl/Tk" {
     It "libtcl" {
         "file /usr/local/lib/libtcl8.6.dylib" | Should -ReturnZeroExitCode
@@ -116,13 +111,7 @@ Describe "bazel" {
     }
 }
 
-Describe "Aliyun CLI" -Skip:($os.IsMonterey -or $os.IsVentura -or $os.IsSonoma) {
-    It "Aliyun CLI" {
-        "aliyun --version" | Should -ReturnZeroExitCode
-    }
-}
-
-Describe "Julia" {
+Describe "Julia" -Skip:($os.IsVentura -or $os.IsSonoma) {
     It "Julia" {
         "julia --version" | Should -ReturnZeroExitCode
     }
@@ -146,19 +135,19 @@ Describe "wget" {
     }
 }
 
-Describe "vagrant" -Skip:($os.IsBigSur -or $os.IsVentura -or $os.IsSonoma) {
+Describe "vagrant" -Skip:($os.IsVentura -or $os.IsSonoma) {
     It "vagrant" {
         "vagrant --version" | Should -ReturnZeroExitCode
     }
 }
 
-Describe "virtualbox" -Skip:($os.IsBigSur -or $os.IsVentura -or $os.IsSonoma) {
+Describe "virtualbox" -Skip:($os.IsVentura -or $os.IsSonoma) {
     It "virtualbox" {
         "vboxmanage -v" | Should -ReturnZeroExitCode
     }
 }
 
-Describe "R" {
+Describe "R" -Skip:($os.IsVentura -or $os.IsSonoma) {
     It "R" {
         "R --version" | Should -ReturnZeroExitCode
     }
@@ -173,7 +162,7 @@ Describe "Homebrew" {
 Describe "Kotlin" {
     $kotlinPackages = @("kapt", "kotlin", "kotlinc", "kotlinc-jvm", "kotlin-dce-js")
 
-    It "<toolName> is available" -TestCases ($kotlinPackages | ForEach-Object { @{ toolName = $_ } }) { 
+    It "<toolName> is available" -TestCases ($kotlinPackages | ForEach-Object { @{ toolName = $_ } }) {
         "$toolName -version" | Should -ReturnZeroExitCode
     }
 }

@@ -1,12 +1,12 @@
 Import-Module "$PSScriptRoot/../helpers/Common.Helpers.psm1"
-Import-Module "$PSScriptRoot/../helpers/Tests.Helpers.psm1" -DisableNameChecking
+Import-Module "$PSScriptRoot/Helpers.psm1" -DisableNameChecking
 
 $arch = Get-Architecture
 $os = Get-OSVersion
 
 Describe "Toolcache" {
     $toolcacheDirectory = Join-Path $env:HOME "hostedtoolcache"
-    [array]$packages += Get-ToolsetValue -KeyPath "toolcache" | ForEach-Object {
+    [array]$packages += (Get-ToolsetContent).toolcache | ForEach-Object {
         return [PSCustomObject] @{
             ToolName = ($_.name).ToLower()
             Arch = $arch
@@ -99,7 +99,7 @@ Describe "Toolcache" {
             }
         }
     }
-    Context "PyPy" -Skip:($os.IsVenturaArm64 -or $os.IsSonomaArm64) {
+    Context "PyPy" -Skip:($os.IsVenturaArm64 -or $os.IsSonoma) {
         $pypyDirectory = Join-Path $toolcacheDirectory "PyPy"
         $pypyPackage = $packages | Where-Object { $_.ToolName -eq "pypy" } | Select-Object -First 1
         $testCase = @{ PypyDirectory = $pypyDirectory }

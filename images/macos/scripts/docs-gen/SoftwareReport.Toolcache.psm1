@@ -37,10 +37,14 @@ function Build-ToolcacheSection {
 
     $nodes = @()
 
+    if ((-not $os.IsVenturaArm64) -and (-not $os.IsSonoma)) {
+        $nodes += @(
+            [ToolVersionsListNode]::new("PyPy", $(Get-ToolcachePyPyVersions), '^\d+\.\d+', "List")
+        )
+    }
     if ((-not $os.IsVenturaArm64) -and (-not $os.IsSonomaArm64)) {
         $nodes += @(
-            [ToolVersionsListNode]::new("Ruby", $(Get-ToolcacheRubyVersions), '^\d+\.\d+', "List"),
-            [ToolVersionsListNode]::new("PyPy", $(Get-ToolcachePyPyVersions), '^\d+\.\d+', "List")
+            [ToolVersionsListNode]::new("Ruby", $(Get-ToolcacheRubyVersions), '^\d+\.\d+', "List")
         )
     }
 
@@ -54,7 +58,7 @@ function Build-ToolcacheSection {
 }
 
 function Get-PowerShellModules {
-    $modules = (Get-ToolsetValue powershellModules).name
+    $modules = ((Get-ToolsetContent).powershellModules).name
     $modules | ForEach-Object {
         $moduleName = $_
         $moduleVersions = Get-Module -Name $moduleName -ListAvailable | Select-Object -ExpandProperty Version | Sort-Object -Unique

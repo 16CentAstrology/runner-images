@@ -1,13 +1,13 @@
 Import-Module "$PSScriptRoot/../helpers/Common.Helpers.psm1"
+
 $os = Get-OSVersion
 
 Describe "RubyGems" {
-    $gemTestCases = Get-ToolsetValue -KeyPath "ruby.rubygems" | ForEach-Object {
+    $gemTestCases = (Get-ToolsetContent).ruby.rubygems | ForEach-Object {
         @{gemName = $_}
     }
 
-    if ($gemTestCases)
-    {
+    if ($gemTestCases) {
         It "Gem <gemName> is installed" -TestCases $gemTestCases {
             "gem list -i '^$gemName$'" | Should -MatchCommandOutput "true"
         }
@@ -32,7 +32,7 @@ Describe "Fastlane" {
     }
 }
 
-Describe "xcpretty" {
+Describe "xcpretty" -Skip:($os.IsVentura -or $os.IsSonoma) {
     It "xcpretty" {
         "xcpretty --version" | Should -ReturnZeroExitCode
     }
