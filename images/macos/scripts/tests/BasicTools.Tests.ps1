@@ -1,4 +1,5 @@
 Import-Module "$PSScriptRoot/../helpers/Common.Helpers.psm1"
+
 $os = Get-OSVersion
 
 Describe "Azure CLI" {
@@ -25,7 +26,7 @@ Describe "cmake" {
     }
 }
 
-Describe "Subversion" -Skip:($os.IsVentura -or $os.IsSonoma) {
+Describe "Subversion" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     It "Subversion" {
         "svn --version" | Should -ReturnZeroExitCode
     }
@@ -58,12 +59,6 @@ Describe "Packer" {
 Describe "Perl" {
     It "Perl" {
         "perl -e 'print substr($^V,1)'" | Should -ReturnZeroExitCode
-    }
-}
-
-Describe "Helm" -Skip:($os.IsMonterey -or $os.IsVentura -or $os.IsSonoma) {
-    It "Helm" {
-        "helm version --short" | Should -ReturnZeroExitCode
     }
 }
 
@@ -116,13 +111,7 @@ Describe "bazel" {
     }
 }
 
-Describe "Aliyun CLI" -Skip:($os.IsMonterey -or $os.IsVentura -or $os.IsSonoma) {
-    It "Aliyun CLI" {
-        "aliyun --version" | Should -ReturnZeroExitCode
-    }
-}
-
-Describe "Julia" {
+Describe "Julia" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     It "Julia" {
         "julia --version" | Should -ReturnZeroExitCode
     }
@@ -146,19 +135,19 @@ Describe "wget" {
     }
 }
 
-Describe "vagrant" -Skip:($os.IsBigSur -or $os.IsVentura -or $os.IsSonoma) {
+Describe "vagrant" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     It "vagrant" {
         "vagrant --version" | Should -ReturnZeroExitCode
     }
 }
 
-Describe "virtualbox" -Skip:($os.IsBigSur -or $os.IsVentura -or $os.IsSonoma) {
+Describe "virtualbox" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     It "virtualbox" {
         "vboxmanage -v" | Should -ReturnZeroExitCode
     }
 }
 
-Describe "R" {
+Describe "R" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     It "R" {
         "R --version" | Should -ReturnZeroExitCode
     }
@@ -173,12 +162,12 @@ Describe "Homebrew" {
 Describe "Kotlin" {
     $kotlinPackages = @("kapt", "kotlin", "kotlinc", "kotlinc-jvm", "kotlin-dce-js")
 
-    It "<toolName> is available" -TestCases ($kotlinPackages | ForEach-Object { @{ toolName = $_ } }) { 
+    It "<toolName> is available" -TestCases ($kotlinPackages | ForEach-Object { @{ toolName = $_ } }) {
         "$toolName -version" | Should -ReturnZeroExitCode
     }
 }
 
-Describe "sbt" -Skip:($os.IsVentura -or $os.IsSonoma) {
+Describe "sbt" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     It "sbt" {
         "sbt -version" | Should -ReturnZeroExitCode
     }
@@ -190,7 +179,7 @@ Describe "yq" {
     }
 }
 
-Describe "imagemagick" -Skip:($os.IsVentura -or $os.IsSonoma) {
+Describe "imagemagick" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     It "imagemagick" {
         "magick -version" | Should -ReturnZeroExitCode
     }

@@ -23,19 +23,19 @@ Describe "Bazel" {
 
 Describe "CodeQL Bundle" {
     It "Single distribution installed" {
-        $CodeQLVersionsWildcard = Join-Path $Env:AGENT_TOOLSDIRECTORY -ChildPath "CodeQL" | Join-Path -ChildPath "*"
+        $CodeQLVersionsWildcard = Join-Path $env:AGENT_TOOLSDIRECTORY -ChildPath "CodeQL" | Join-Path -ChildPath "*"
         $CodeQLVersionPath = Get-ChildItem $CodeQLVersionsWildcard | Should -HaveCount 1
     }
 
     It "Contains CodeQL executable" {
-        $CodeQLVersionsWildcard = Join-Path $Env:AGENT_TOOLSDIRECTORY -ChildPath "CodeQL" | Join-Path -ChildPath "*"
+        $CodeQLVersionsWildcard = Join-Path $env:AGENT_TOOLSDIRECTORY -ChildPath "CodeQL" | Join-Path -ChildPath "*"
         $CodeQLVersionPath = Get-ChildItem $CodeQLVersionsWildcard | Sort-Object -Descending | Select-Object -First 1 -Expand FullName
         $CodeQLPath = Join-Path $CodeQLVersionPath -ChildPath "x64" | Join-Path -ChildPath "codeql" | Join-Path -ChildPath "codeql.exe"
         "$CodeQLPath version --quiet" | Should -ReturnZeroExitCode
     }
 
     It "Contains CodeQL packs" {
-        $CodeQLVersionsWildcard = Join-Path $Env:AGENT_TOOLSDIRECTORY -ChildPath "CodeQL" | Join-Path -ChildPath "*"
+        $CodeQLVersionsWildcard = Join-Path $env:AGENT_TOOLSDIRECTORY -ChildPath "CodeQL" | Join-Path -ChildPath "*"
         $CodeQLVersionPath = Get-ChildItem $CodeQLVersionsWildcard | Sort-Object -Descending | Select-Object -First 1 -Expand FullName
         $CodeQLPacksPath = Join-Path $CodeQLVersionPath -ChildPath "x64" | Join-Path -ChildPath "codeql" | Join-Path -ChildPath "qlpacks"
         $CodeQLPacksPath | Should -Exist
@@ -119,7 +119,7 @@ Describe "NET48" {
 
 Describe "NSIS" {
     It "NSIS" {
-       "makensis /VERSION" | Should -ReturnZeroExitCode
+        "makensis /VERSION" | Should -ReturnZeroExitCode
     }
 }
 
@@ -141,7 +141,13 @@ Describe "Sbt" {
 
 Describe "ServiceFabricSDK" {
     It "PowerShell Module" {
-        Get-Module -Name ServiceFabric -ListAvailable | Should -Not -BeNullOrEmpty
+        # Ignore PowerShell version check if running in PowerShell Core
+        # https://github.com/microsoft/service-fabric/issues/1343
+        if ($PSVersionTable.PSEdition -eq 'Core') {
+            Get-Module -Name ServiceFabric -SkipEditionCheck -ListAvailable | Should -Not -BeNullOrEmpty
+        } else {
+            Get-Module -Name ServiceFabric -ListAvailable | Should -Not -BeNullOrEmpty
+        }
     }
 
     It "ServiceFabricSDK version" {
@@ -195,9 +201,9 @@ Describe "Pipx" {
 }
 
 Describe "Kotlin" {
-    $kotlinPackages =  @("kapt", "kotlin", "kotlinc", "kotlin-dce-js", "kotlinc-jvm")
+    $kotlinPackages = @("kapt", "kotlin", "kotlinc", "kotlin-dce-js", "kotlinc-jvm")
 
-    It "<toolName> is available" -TestCases ($kotlinPackages | ForEach-Object { @{ toolName = $_ } })  {
+    It "<toolName> is available" -TestCases ($kotlinPackages | ForEach-Object { @{ toolName = $_ } }) {
         "$toolName -version" | Should -ReturnZeroExitCode
     }
 }

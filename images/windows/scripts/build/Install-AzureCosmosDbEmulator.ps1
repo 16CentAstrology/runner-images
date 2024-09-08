@@ -3,10 +3,8 @@
 ##  Desc:  Install Azure CosmosDb Emulator
 ####################################################################################
 
-$InstallerName = "AzureCosmosDBEmulator.msi"
-$InstallerUrl = "https://aka.ms/cosmosdb-emulator"
-$SignatureThumbprint = "F372C27F6E052A6BE8BAB3112B465C692196CD6F"
-
-Install-Binary -Url $InstallerUrl -Name $InstallerName -ExpectedSignature $SignatureThumbprint
+Install-Binary -Type MSI `
+    -Url "https://aka.ms/cosmosdb-emulator" `
+    -ExpectedSHA256Sum "DB9D5E496C5FDAE17C12C03385D2BAC973DA61C280023D9FDC9A6020220BEE41"
 
 Invoke-PesterTests -TestFile "Tools" -TestName "Azure Cosmos DB Emulator"

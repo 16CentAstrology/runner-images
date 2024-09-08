@@ -1,17 +1,20 @@
 Import-Module "$PSScriptRoot/../helpers/Common.Helpers.psm1"
-Import-Module "$PSScriptRoot/../helpers/Tests.Helpers.psm1" -DisableNameChecking
+Import-Module "$PSScriptRoot/Helpers.psm1" -DisableNameChecking
 
 $os = Get-OSVersion
+
 if ($os.IsVentura -or $os.IsSonoma) {
-    $MONO_VERSIONS = @(Get-ToolsetValue "mono.framework.version")
+    $MONO_VERSIONS = @((Get-ToolsetContent).mono.framework.version)
     $XAMARIN_IOS_VERSIONS = @()
     $XAMARIN_MAC_VERSIONS = @()
     $XAMARIN_ANDROID_VERSIONS = @()
-} elseif ($os.IsBigSur -or $os.IsMonterey) {
-    $MONO_VERSIONS = Get-ToolsetValue "xamarin.mono-versions"
-    $XAMARIN_IOS_VERSIONS = Get-ToolsetValue "xamarin.ios-versions"
-    $XAMARIN_MAC_VERSIONS = Get-ToolsetValue "xamarin.mac-versions"
-    $XAMARIN_ANDROID_VERSIONS = Get-ToolsetValue "xamarin.android-versions"
+} elseif ($os.IsMonterey) {
+    $MONO_VERSIONS = (Get-ToolsetContent).xamarin.mono_versions
+    $XAMARIN_IOS_VERSIONS = (Get-ToolsetContent).xamarin.ios_versions
+    $XAMARIN_MAC_VERSIONS = (Get-ToolsetContent).xamarin.mac_versions
+    $XAMARIN_ANDROID_VERSIONS = (Get-ToolsetContent).xamarin.android_versions
+} elseif ($os.IsSequoia) {
+    Write-Host "Skipping all the Mono and Xamarin tests as deprecated"
 }
 
 BeforeAll {
@@ -25,7 +28,7 @@ BeforeAll {
     }
 }
 
-Describe "Mono" {
+Describe "Mono" -Skip:($os.IsSequoia) {
     $MONO_VERSIONS | ForEach-Object {
         Context "$_" {
             $MONO_VERSIONS_PATH = "/Library/Frameworks/Mono.framework/Versions"
@@ -53,7 +56,7 @@ Describe "Mono" {
                 $shortVersionPath = Join-Path $shortSymlinkFolderPath "VERSION"
                 $fullVersionPath = Join-Path $VersionFolderPath "VERSION"
 
-                Validate-IdenticalFileContent -File1 $shortVersionPath -File2 $fullVersionPath
+                Confirm-IdenticalFileContent -File1 $shortVersionPath -File2 $fullVersionPath
             }
 
             It "NUnit console is installed" -TestCases $testCase {
@@ -89,7 +92,7 @@ Describe "Mono" {
     }
 }
 
-Describe "Xamarin.iOS" -Skip:($os.IsVentura -or $os.IsSonoma) {
+Describe "Xamarin.iOS" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     $XAMARIN_IOS_VERSIONS | ForEach-Object {
         Context "$_" {
             $XAMARIN_IOS_VERSIONS_PATH = "/Library/Frameworks/Xamarin.iOS.framework/Versions"
@@ -116,13 +119,13 @@ Describe "Xamarin.iOS" -Skip:($os.IsVentura -or $os.IsSonoma) {
                 $shortVersionPath = Join-Path $shortSymlinkFolderPath "VERSION"
                 $fullVersionPath = Join-Path $VersionFolderPath "VERSION"
 
-                Validate-IdenticalFileContent -File1 $shortVersionPath -File2 $fullVersionPath
+                Confirm-IdenticalFileContent -File1 $shortVersionPath -File2 $fullVersionPath
             }
         }
     }
 }
 
-Describe "Xamarin.Mac" -Skip:($os.IsVentura -or $os.IsSonoma) {
+Describe "Xamarin.Mac" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     $XAMARIN_MAC_VERSIONS | ForEach-Object {
         Context "$_" {
             $XAMARIN_MAC_VERSIONS_PATH = "/Library/Frameworks/Xamarin.Mac.framework/Versions"
@@ -149,13 +152,13 @@ Describe "Xamarin.Mac" -Skip:($os.IsVentura -or $os.IsSonoma) {
                 $shortVersionPath = Join-Path $shortSymlinkFolderPath "VERSION"
                 $fullVersionPath = Join-Path $VersionFolderPath "VERSION"
 
-                Validate-IdenticalFileContent -File1 $shortVersionPath -File2 $fullVersionPath
+                Confirm-IdenticalFileContent -File1 $shortVersionPath -File2 $fullVersionPath
             }
         }
     }
 }
 
-Describe "Xamarin.Android" -Skip:($os.IsVentura -or $os.IsSonoma) {
+Describe "Xamarin.Android" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     $XAMARIN_ANDROID_VERSIONS | ForEach-Object {
         Context "$_" {
             $XAMARIN_ANDROID_VERSIONS_PATH = "/Library/Frameworks/Xamarin.Android.framework/Versions"
@@ -181,7 +184,7 @@ Describe "Xamarin.Android" -Skip:($os.IsVentura -or $os.IsSonoma) {
                 $shortVersionPath = Join-Path $shortSymlinkFolderPath "VERSION"
                 $fullVersionPath = Join-Path $VersionFolderPath "VERSION"
 
-                Validate-IdenticalFileContent -File1 $shortVersionPath -File2 $fullVersionPath
+                Confirm-IdenticalFileContent -File1 $shortVersionPath -File2 $fullVersionPath
             }
 
             It "has correct symlinks" -TestCases $testCase {
@@ -195,7 +198,7 @@ Describe "Xamarin.Android" -Skip:($os.IsVentura -or $os.IsSonoma) {
     }
 }
 
-Describe "Xamarin Bundles" -Skip:($os.IsVentura -or $os.IsSonoma) {
+Describe "Xamarin Bundles" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     BeforeAll {
         $MONO_VERSIONS_PATH = "/Library/Frameworks/Mono.framework/Versions"
         $XAMARIN_IOS_VERSIONS_PATH = "/Library/Frameworks/Xamarin.iOS.framework/Versions"
@@ -205,8 +208,8 @@ Describe "Xamarin Bundles" -Skip:($os.IsVentura -or $os.IsSonoma) {
 
     If ($XAMARIN_BUNDLES.Count -eq 0) { return } # Skip this test if there are no bundles
 
-    [array]$XAMARIN_BUNDLES = Get-ToolsetValue "xamarin.bundles"
-    $XAMARIN_DEFAULT_BUNDLE = Get-ToolsetValue "xamarin.bundle-default"
+    [array]$XAMARIN_BUNDLES = (Get-ToolsetContent).xamarin.bundles
+    $XAMARIN_DEFAULT_BUNDLE = (Get-ToolsetContent).xamarin.bundle_default
     If ($XAMARIN_DEFAULT_BUNDLE -eq "latest") { $XAMARIN_DEFAULT_BUNDLE = $XAMARIN_BUNDLES[0].symlink }
 
     $currentBundle = [PSCustomObject] @{
@@ -244,7 +247,7 @@ Describe "Xamarin Bundles" -Skip:($os.IsVentura -or $os.IsSonoma) {
         $sourceVersionPath = Join-Path $MONO_VERSIONS_PATH $BundleMono "VERSION"
         $targetVersionPath = Join-Path $MONO_VERSIONS_PATH $BundleSymlink "VERSION"
 
-        Validate-IdenticalFileContent -File1 $targetVersionPath -File2 $sourceVersionPath
+        Confirm-IdenticalFileContent -File1 $targetVersionPath -File2 $sourceVersionPath
     }
 
     It "iOS symlink <BundleSymlink> exists" -TestCases $allBundles {
@@ -262,7 +265,7 @@ Describe "Xamarin Bundles" -Skip:($os.IsVentura -or $os.IsSonoma) {
         $sourceVersionPath = Join-Path $XAMARIN_IOS_VERSIONS_PATH $BundleIos "VERSION"
         $targetVersionPath = Join-Path $XAMARIN_IOS_VERSIONS_PATH $BundleSymlink "VERSION"
 
-        Validate-IdenticalFileContent -File1 $targetVersionPath -File2 $sourceVersionPath
+        Confirm-IdenticalFileContent -File1 $targetVersionPath -File2 $sourceVersionPath
     }
 
     It "Mac symlink <BundleSymlink> exists" -TestCases $allBundles {
@@ -280,7 +283,7 @@ Describe "Xamarin Bundles" -Skip:($os.IsVentura -or $os.IsSonoma) {
         $sourceVersionPath = Join-Path $XAMARIN_MAC_VERSIONS_PATH $BundleMac "VERSION"
         $targetVersionPath = Join-Path $XAMARIN_MAC_VERSIONS_PATH $BundleSymlink "VERSION"
 
-        Validate-IdenticalFileContent -File1 $targetVersionPath -File2 $sourceVersionPath
+        Confirm-IdenticalFileContent -File1 $targetVersionPath -File2 $sourceVersionPath
     }
 
     It "Xamarin.Android symlink <BundleSymlink> exists" -TestCases $allBundles {
@@ -298,11 +301,11 @@ Describe "Xamarin Bundles" -Skip:($os.IsVentura -or $os.IsSonoma) {
         $sourceVersionPath = Join-Path $XAMARIN_ANDROID_VERSIONS_PATH $BundleAndroid "VERSION"
         $targetVersionPath = Join-Path $XAMARIN_ANDROID_VERSIONS_PATH $BundleSymlink "VERSION"
 
-        Validate-IdenticalFileContent -File1 $targetVersionPath -File2 $sourceVersionPath
+        Confirm-IdenticalFileContent -File1 $targetVersionPath -File2 $sourceVersionPath
     }
 }
 
-Describe "Nuget" -Skip:($os.IsVentura -or $os.IsSonoma) {
+Describe "Nuget" -Skip:($os.IsVentura -or $os.IsSonoma -or $os.IsSequoia) {
     It "Nuget config contains nuget.org feed" {
         Get-Content $env:HOME/.config/NuGet/NuGet.Config | Out-String | Should -Match "nuget.org"
     }

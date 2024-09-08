@@ -1,7 +1,5 @@
 Import-Module "$PSScriptRoot/../helpers/Common.Helpers.psm1"
 
-$os = Get-OSVersion
-
 function Get-BashVersion {
     $version = bash -c 'echo ${BASH_VERSION}'
     return $version
@@ -83,7 +81,7 @@ function Get-VcpkgVersion {
 }
 
 function Get-GccVersions {
-    $versionList = Get-ToolsetValue -KeyPath gcc.versions
+    $versionList = (Get-ToolsetContent).gcc.versions
     $versionList | Foreach-Object {
         $nameVersion = Run-Command "gcc-${_} --version" | Select-Object -First 1
         $version = ($nameVersion -replace "^gcc-${_}").Trim() -replace '\).*$', ')'
@@ -92,7 +90,7 @@ function Get-GccVersions {
 }
 
 function Get-FortranVersions {
-    $versionList = Get-ToolsetValue -KeyPath gcc.versions
+    $versionList = (Get-ToolsetContent).gcc.versions
     $versionList | Foreach-Object {
         $nameVersion = Run-Command "gfortran-${_} --version" | Select-Object -First 1
         $version = ($nameVersion -replace "^GNU Fortran").Trim() -replace '\).*$', ')'
@@ -106,7 +104,7 @@ function Get-ClangLLVMVersions {
     $defaultClangOutput = Run-Command "clang --version" | Out-String
     $defaultClangVersion = $clangVersionRegex.Match($defaultClangOutput).Groups['version'].Value
 
-    $homebrewClangPath = '$(brew --prefix llvm@{0})/bin/clang' -f (Get-ToolsetValue 'llvm.version')
+    $homebrewClangPath = '$(brew --prefix llvm@{0})/bin/clang' -f ((Get-ToolsetContent).llvm.version)
     $homebrewClangOutput = Run-Command "$homebrewClangPath --version" | Out-String
     $homebrewClangVersion = $clangVersionRegex.Match($homebrewClangOutput).Groups['version'].Value
 
@@ -156,7 +154,7 @@ function Build-OSInfoSection {
     )
 
     $fieldsToInclude = @("System Version:", "Kernel Version:")
-    $rawSystemInfo = Invoke-Expression "system_profiler SPSoftwareDataType"
+    $rawSystemInfo = Run-Command "system_profiler SPSoftwareDataType"
     $parsedSystemInfo = $rawSystemInfo | Where-Object { -not ($_ | Select-String -NotMatch $fieldsToInclude) } | ForEach-Object { $_.Trim() }
     $parsedSystemInfo[0] -match "System Version: macOS (?<version>\d+)" | Out-Null
     $version = $Matches.Version
@@ -171,12 +169,12 @@ function Build-OSInfoSection {
 }
 
 function Get-MonoVersion {
-    $monoVersion = mono --version | Out-String | Take-Part -Part 4
+    $monoVersion = Run-Command "mono --version" | Out-String | Take-Part -Part 4
     return $monoVersion
 }
 
 function Get-MSBuildVersion {
-    $msbuildVersion = msbuild -version | Select-Object -Last 1
+    $msbuildVersion = Run-Command "msbuild -version" | Select-Object -Last 1
     $monoVersion = Get-MonoVersion
     return "$msbuildVersion (Mono $monoVersion)"
 }
@@ -252,7 +250,7 @@ function Get-NuGetVersion {
 }
 
 function Get-CondaVersion {
-    $condaVersion = Invoke-Expression "conda --version"
+    $condaVersion = Run-Command "conda --version"
     return ($condaVersion -replace "^conda").Trim()
 }
 
@@ -262,7 +260,7 @@ function Get-RubyGemsVersion {
 }
 
 function Get-ComposerVersion {
-    $composerVersion = Run-Command "composer --version" | Take-Part -Part 2
+    $composerVersion = Run-Command "composer --version" | Select-Object -First 1 | Take-Part -Part 2
     return $composerVersion
 }
 
@@ -314,7 +312,7 @@ function Get-SVNVersion {
 
 function Get-PackerVersion {
     # Packer 1.7.1 has a bug and outputs version to stderr instead of stdout https://github.com/hashicorp/packer/issues/10855
-    $result = Run-Command -Command "packer --version"
+    $result = Run-Command "packer --version"
     $packerVersion = [regex]::matches($result, "(\d+.){2}\d+").Value
     return $packerVersion
 }
@@ -350,7 +348,7 @@ function Get-Aria2Version {
 }
 
 function Get-AzcopyVersion {
-    $azcopyVersion = Run-Command "azcopy --version" | Take-Part -Part 2
+    $azcopyVersion = [string]$(Run-Command "azcopy --version") | Take-Part -Part 2
     return $azcopyVersion
 }
 
@@ -367,11 +365,6 @@ function Get-BazelVersion {
 function Get-BazeliskVersion {
     $bazeliskVersion = Run-Command "brew list bazelisk --versions"
     return ($bazeliskVersion -replace "^bazelisk").Trim()
-}
-
-function Get-HelmVersion {
-    $helmVersion = Run-Command "helm version --short"
-    return $helmVersion
 }
 
 function Get-MongoVersion {
@@ -397,11 +390,6 @@ function Get-GnuTarVersion {
 function Get-BsdtarVersion {
     $bsdtar = Run-Command "tar --version" | Take-Part -Part 1
     return "$bsdtar - available by 'tar' alias"
-}
-
-function Get-NewmanVersion {
-    $newmanVersion = Run-Command "newman --version"
-    return $newmanVersion
 }
 
 function Get-VirtualBoxVersion {
@@ -457,11 +445,6 @@ function Get-AWSSAMCLIVersion {
 function Get-AWSSessionManagerCLIVersion {
     $awsSessionManagerVersion = Run-Command "session-manager-plugin --version"
     return $awsSessionManagerVersion
-}
-
-function Get-AliyunCLIVersion {
-    $aliyunVersion = Run-Command "aliyun --version" | Select-String "Alibaba Cloud Command Line Interface Version " | Take-Part -Part 6
-    return $aliyunVersion
 }
 
 function Get-GHCupVersion {
@@ -540,22 +523,22 @@ function Get-JazzyVersion {
 }
 
 function Get-ZlibVersion {
-	$zlibVersion = brew info --json zlib | jq -r '.[].installed[].version'
+	$zlibVersion = (Run-Command "brew info --json zlib" | ConvertFrom-Json).installed.version
 	return $zlibVersion
 }
 
 function Get-LibXftVersion {
-    $libXftVersion = brew info --json libxft | jq -r '.[].installed[].version'
+    $libXftVersion = (Run-Command "brew info --json libxft" | ConvertFrom-Json).installed.version
     return $libXftVersion
 }
 
 function Get-LibXextVersion {
-    $libXextVersion = brew info --json libxext | jq -r '.[].installed[].version'
+    $libXextVersion = (Run-Command "brew info --json libxext" | ConvertFrom-Json).installed.version
     return $libXextVersion
 }
 
 function Get-TclTkVersion {
-    $tcltkVersion = brew info --json tcl-tk | jq -r '.[].installed[].version'
+    $tcltkVersion = (Run-Command "brew info --json tcl-tk" | ConvertFrom-Json).installed.version
     return $tcltkVersion
 }
 
